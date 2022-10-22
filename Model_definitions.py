@@ -19,6 +19,7 @@ from torchvision import datasets, transforms
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+
 class VGG(nn.Module):
     def __init__(self, configuration, image_channel=3, num_classes=10, batch_norm=True, pooling_size=2, param_list=False, width_factor=1):
         super(VGG, self).__init__()

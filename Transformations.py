@@ -193,7 +193,6 @@ def diffeo_distr(batch_size,diffeo_shape,device):
 def diffeo_parameters(distr,shape,diffeo_shape,device, temperature):
     para = distr.sample().to(device)
     para = torch.reshape(para, shape)
-    #print("the para in the beginning of the loop are ",para)
     if(len(diffeo_shape)==2):
         for p in para:
             for i in range(0, diffeo_shape[0]):
@@ -201,59 +200,4 @@ def diffeo_parameters(distr,shape,diffeo_shape,device, temperature):
                     p[i, j] *= mt.sqrt(temperature / ((i + 1) ** 2 + (j + 1) ** 2))
     else:
         para = torch.zeros(shape)
-        #print("the para in the end of the loop are ",para)
     return para
-# class Vector_Transformations(Transformations):
-#
-#     def __init__(self, Temperature, cut_off, parameters, unit_vectors):
-#         self.unit_vectors = unit_vectors
-#         super(Vector_Transformations, self).__init__(Temperature, cut_off, parameters)
-#
-#     def diffeo(self, vectors):
-#         dimension = len(self.unit_vectors)
-#         print("the dimension of the space is ", dimension)
-#         print(self.unit_vectors)
-#         sub_space_dimension = int(np.sum(self.unit_vectors))
-#         print("the dimension of the diffeo subspace is ",sub_space_dimension)
-#         initial_diffeo_vector = torch.zeros(dimension)
-#         initial_temp_diffeo_vector = torch.rand(sub_space_dimension)
-#         n = torch.norm(initial_temp_diffeo_vector,p='fro')
-#         print("initial vectors ",initial_diffeo_vector,initial_temp_diffeo_vector)
-#         print("the norm is ", n)
-#         index = 0
-#         for i in range(0,dimension):
-#             if (self.unit_vectors[i] > 0):
-#                 initial_diffeo_vector[i] = initial_temp_diffeo_vector[index]
-#                 index += 1
-#         print("final diffeo ", initial_diffeo_vector/n.detach())
-#         out = torch.clone(vectors)
-#         norms = []
-#         # for i in range(len(vectors)):
-#         #     out[i] = torch.add(vectors[i], torch.mul(self.parameters[i], self.unit_vector))
-#         #     norms += [torch.norm(torch.mul(self.parameters[i], self.unit_vector), p='fro').item()]
-#         # # out = torch.add(vectors, torch.mul(self.parameters[i],unit_vector))
-#         return out, norms
-#
-#     def Noise(self, vectors, norms): ### add a cut-off
-#         out = torch.clone(vectors)
-#         Norms = []
-#         for i in range(len(vectors)):
-#             temp_v = torch.rand(vectors[i].size(0))
-#             delta = torch.mul(temp_v,
-#                               norms[i] / torch.norm(temp_v, p='fro', dim=None, keepdim=False, out=None, dtype=None))
-#             out[i] = vectors[i] + delta
-#             Norms += [torch.norm(delta, p='fro').item()]
-#         return out, Norms
-#
-# class Image_Transformations(Transformations):
-#     def __init__(self, Temperature, cut_off, parameters):
-#         super(Vector_Transformations, self).__init__(Temperature, cut_off, parameters)
-#
-#     def diffeo(self, image):
-#         return Diffeomorphisms.Trans(image, self.Temperature, self.cut_off_frequency, self.parameters), 0
-#
-#     def Noise(self, images, norms):
-#         return image
-#
-#
-#
