@@ -78,13 +78,13 @@ def train(device,Initial_PATH,Final_PATH,batch_size,N_epochs, cut_off = 1 , temp
                 SUM_OF_EQUAL = torch.sum(BOOL_OF_EQUALITY).item()
                 index = 0
                 while ((SUM_OF_EQUAL > 0) and (index <=Ndiffeo)):
-                    #Transf.parameters.requires_grad = False
-                    #NEW_TEMP = torch.zeros(shape,dtype = torch.bool).to(device)
-                    #NEW_TEMP[BOOL_OF_EQUALITY] = NON_ZERO_TENSOR
+                    Transf.parameters.requires_grad = False
+                    NEW_TEMP = torch.zeros(shape,dtype = torch.bool).to(device)
+                    NEW_TEMP[BOOL_OF_EQUALITY] = NON_ZERO_TENSOR
                     #inputs_temp = Transformations.deform_OLD(inputs,temperature,cut_off)
-                    #Transf.parameters[NEW_TEMP] = (torch.randn(shape)[NEW_TEMP.to('cpu')]).to(device)
+                    Transf.parameters[NEW_TEMP] = (torch.randn(shape)[NEW_TEMP.to('cpu')]).to(device)
                     #print(Transf.parameters)
-                    outputs = Net(Transformations.deform_OLD(inputs,temperature,cut_off))
+                    outputs = Net(Transf.Diffeomorphism(inputs)[0])
                     #print(Transf.Diffeomorphism(inputs)[1])
                     predicted = torch.max(outputs.data, 1).indices.to(device)
                     BOOL_OF_EQUALITY = torch.eq(predicted, labels).to(device)
