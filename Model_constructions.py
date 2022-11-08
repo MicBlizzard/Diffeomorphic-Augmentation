@@ -22,8 +22,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import Model_definitions
 
 
-
-
 convolution_channels = [64,128,256,512,512]
 convolution_depths = [1,1,1,2,2]
 types_of_pooling = ['M','M','M','M','M']

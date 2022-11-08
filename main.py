@@ -9,7 +9,9 @@ import torch as tr
 # ######## GENERAL INFORMATION ##############
 #
 device = tr.device('cuda' if tr.cuda.is_available() else 'cpu')
+print(tr.cuda.is_available())
 Initial_PATH = "./model/net.pth"
+#Initial_PATH = "./model/vggbn_trained"
 Final_PATH = "./model/net_trained.pth"
 #
 # ############# DATA GENERATION ################
@@ -108,30 +110,29 @@ Type_of_System = ["Images","CIFAR10"]
 #     net.to(device)
 # else:
 #     depth = 100
-#     net = Model_definitions.SimpleFCC(dimension_of_space,depth,Number_of_classes)
-#     net.to(device)
+#     #net = Model_definitions.SimpleFCC(dimension_of_space,depth,Number_of_classes)
+#     #net.to(device)
 # tr.save(net, Initial_PATH)
-#
-# ################ TRAINING #######################
 
-batch_size = 64
-N_epochs = 50
+################ TRAINING #######################
 
-Type_of_training = "Standard"
-#Type_of_training = "Adversarial"
+batch_size = 128
+N_epochs = 3
+
+#Type_of_training = "Standard"
+Type_of_training = "Adversarial"
 
 if (Type_of_training== "Standard"):
 
     final_loss, Norms, Likelyhood = train.train(device, Initial_PATH, Final_PATH, batch_size, N_epochs)
 
 if (Type_of_training == "Adversarial"):
-    cut_off = 2
-    temperature = 0.003
+    cut_off = 6
+    temperature = 0.001
     if (Type_of_System[0] == "Vectors"):
         temperature = 0
     N_attack = 2
     gradient_ascent_step_size = 0.01
-
     final_loss, Norms, Likelyhood = train.train(device, Initial_PATH, Final_PATH, batch_size, N_epochs, cut_off, temperature, N_attack, gradient_ascent_step_size)
 
 print('The final loss is ',final_loss,'the average deformation norm is ', Norms,"the diffeomorphism likelyhood is ", Likelyhood)

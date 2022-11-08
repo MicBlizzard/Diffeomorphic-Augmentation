@@ -66,7 +66,7 @@ def deform(image, T, cut,C, interp='linear'):
     dy = T ** 0.5 * v * n
 
     # Apply tau
-    return remap(image, dx, dy, interp)
+    return remap(image, dx, dy, interp).contignous()
 
 
 def remap(a, dx, dy, interp):
@@ -135,5 +135,5 @@ def Trans(X,T,cut,C_list):
     X_new = torch.clone(X)
     for i in range(0,X.shape[0]):
         X_new[i] =  deform(X[i], T, cut ,C_list[i], interp='linear')
-    return X_new
+    return X_new.contiguous()
 

@@ -34,6 +34,17 @@ def scalar_field_modes(n, m, dtype=torch.float64, device='cpu'):
     s = torch.sin(math.pi * x[:, None] * k[None, :])
     return e, s
 
+def non_zero_mode(n, m, dtype=torch.float64, device='cpu'):
+    """
+    sqrt(1 / Energy per mode) and the modes
+    """
+    x = torch.linspace(0, 1, n, dtype=dtype, device=device)
+    k = torch.arange(1, m + 1, dtype=dtype, device=device)
+    i, j = torch.meshgrid(k, k)
+    r = (i.pow(2) + j.pow(2)).sqrt()
+    e = (r < m + 0.5)
+    return e
+
 
 def scalar_field(n, m,C, device='cpu'):
     """
@@ -41,8 +52,44 @@ def scalar_field(n, m,C, device='cpu'):
     """
     e, s = scalar_field_modes(n, m, dtype=torch.get_default_dtype(), device=device)
     c = C * e
-    #print("the c field is ", c)
+    #print(c)
     return torch.einsum('ij,xi,yj->yx', c, s, s)
+
+
+def scalar_field_OLD(n, m, device='cpu'):
+    """
+    random scalar field of size nxn made of the first m modes
+    """
+    e, s = scalar_field_modes(n, m, dtype=torch.get_default_dtype(), device=device)
+    C = torch.randn(m, m, device=device)
+    c = C * e
+    #print(c)
+    return torch.einsum('ij,xi,yj->yx', c, s, s)
+
+
+def deform_OLD(image, T, cut, interp='linear'):
+    """
+    1. Sample a displacement field tau: R2 -> R2, using tempertature `T` and cutoff `cut`
+    2. Apply tau to `image`
+    :param img Tensor: square image(s) [..., y, x]
+    :param T float: temperature
+    :param cut int: high frequency cutoff
+    """
+    n = image.shape[-1]
+    assert image.shape[-2] == n, 'Image(s) should be square.'
+
+    device = image.device.type
+
+    # Sample dx, dy
+    # u, v are defined in [0, 1]^2
+    # dx, dx are defined in [0, n]^2
+    u = scalar_field_OLD(n, cut, device)  # [n,n]
+    v = scalar_field_OLD(n, cut, device)  # [n,n]
+    dx = T ** 0.5 * u * n
+    dy = T ** 0.5 * v * n
+
+    # Apply tau
+    return remap(image, dx, dy, interp)
 
 def deform(image, T, cut,C, interp='linear'):
     """
@@ -55,7 +102,6 @@ def deform(image, T, cut,C, interp='linear'):
     n = image.shape[-1]
     assert image.shape[-2] == n, 'Image(s) should be square.'
     device = image.device.type
-
     # Sample dx, dy
     # u, v are defined in [0, 1]^2
     # dx, dx are defined in [0, n]^2
@@ -65,8 +111,7 @@ def deform(image, T, cut,C, interp='linear'):
     dy = T ** 0.5 * v * n
 
     # Apply tau
-    return remap(image, dx, dy, interp)
-
+    return remap(image, dx, dy, interp).contiguous()
 
 def remap(a, dx, dy, interp):
     """
@@ -77,8 +122,7 @@ def remap(a, dx, dy, interp):
     """
     n, m = a.shape[-2:]
     assert dx.shape == (n, m) and dy.shape == (n, m), 'Image(s) and displacement fields shapes should match.'
-
-    y, x = torch.meshgrid(torch.arange(n, dtype=dx.dtype), torch.arange(m, dtype=dx.dtype))
+    y, x = torch.meshgrid(torch.arange(n, dtype=dx.dtype, device = dx.device.type), torch.arange(m, dtype=dx.dtype, device = dx.device.type))
 
     xn = (x - dx).clamp(0, m-1)
     yn = (y - dy).clamp(0, n-1)
@@ -137,12 +181,14 @@ def TransVectors(X,temperature,cut_off, parameters, diffeo):
     return X_new, norms
 
 def TransImages(X,T,cut,C_list):
-    X_new = torch.clone(X)
+    device = X.device.type
+    X_new = torch.clone(X).to(device)
     norms = []
     for i in range(0,X.shape[0]):
         X_new[i] =  deform(X[i], T, cut ,C_list[i], interp='linear')
         norms +=[torch.norm(X[i]-X_new[i]).item()]
-    return X_new, norms
+
+    return X_new.contiguous(), norms
 
 class Transformations:
     def __init__(self, temperature, cut_off, parameters ,Model,Data_type,dimension,index_of_discriminating_factor, diffeo):
@@ -169,7 +215,7 @@ class Transformations:
         for i in range(0,len(input)):
             delta[i] *= norms[i]/torch.norm(delta[i])
             X_new[i] += delta[i]
-        return X_new, norms
+        return X_new + delta, norms
 
 def Diffeo_shape(diffeo_shape,cut_off):
     diffeo_shape = np.array(diffeo_shape)

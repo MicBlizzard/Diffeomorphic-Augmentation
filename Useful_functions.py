@@ -27,8 +27,13 @@ def likelyhood_of_diffeomorphisms(c_matrix,T):
     return ps
 
 
-def imshow(img):
-    img = img / 2 + 0.5     # unnormalize
-    npimg = img.numpy()
-    plt.imshow(np.transpose(npimg, (1, 2, 0)))
+def imshow(img1,img2):
+    img1 = img1 / 2 + 0.5     # unnormalize
+    npimg1 = img1.numpy()
+    img2 = img2 / 2 + 0.5     # unnormalize
+    npimg2 = img2.numpy()
+    #plt.imshow(npimg)
+    fig, axs = plt.subplots(1, 2)
+    axs[0].imshow(np.transpose(npimg1[:,:,:], ( 2,1,0)))
+    axs[1].imshow(np.transpose(npimg2[:,:,:], ( 2,1,0)))
     plt.show()
